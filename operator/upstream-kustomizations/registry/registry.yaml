@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
       - name: registry
-        image: ghcr.io/project-zot/zot:v2.1.13
+        image: quay.io/redhat-user-workloads/konflux-vanguard-tenant/konflux-ci/zot@sha256:d2fd37b87f958304907296c22f599a898b49909ce8e72558634f1eb2d8fdd3d5
         args: ["serve", "/etc/zot/config.json"]
         resources:
           requests:
