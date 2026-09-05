@@ -5,6 +5,9 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/name: build-service
     control-plane: controller-manager
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
   name: build-service
 ---
 apiVersion: v1
@@ -132,21 +135,34 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - events
-  verbs:
-  - create
-  - patch
-- apiGroups:
-  - ""
-  resources:
+  - configmaps
+  - secrets
   - serviceaccounts
   verbs:
   - create
+  - delete
   - get
   - list
   - patch
   - update
   - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
 - apiGroups:
   - apiextensions.k8s.io
   resources:
@@ -169,31 +185,22 @@ rules:
   - components/status
   - imagerepositories
   - imagerepositories/status
+  - nudgeconfigs
   - releaseplanadmissions
   verbs:
   - get
   - list
   - watch
 - apiGroups:
-  - ""
+  - konflux-ci.dev
   resources:
-  - configmaps
-  - secrets
+  - components
+  - components/status
   verbs:
-  - create
-  - delete
   - get
   - list
   - patch
   - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - list
   - watch
 - apiGroups:
   - pipelinesascode.tekton.dev
@@ -209,9 +216,13 @@ rules:
   - watch
 - apiGroups:
   - rbac.authorization.k8s.io
+  resourceNames:
+  - appstudio-pipelines-runner
+  - konflux-build-pipelines-runner
   resources:
   - clusterroles
   verbs:
+  - bind
   - get
 - apiGroups:
   - rbac.authorization.k8s.io
@@ -411,7 +422,7 @@ spec:
         env:
         - name: PAC_WEBHOOK_URL
           value: http://pipelines-as-code-controller.pipelines-as-code.svc.cluster.local:8180
-        image: quay.io/konflux-ci/build-service:30b03e329a54797bd86bb05b7a6a70b189d22802
+        image: quay.io/konflux-ci/build-service:0be399c54c4e550e4b5aafa0aef7cb4db6f658db
         livenessProbe:
           httpGet:
             path: /healthz
